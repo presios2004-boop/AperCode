@@ -75,13 +75,46 @@ bash install_desktop.sh
 ウィンドウを閉じるとサーバーも終了する。ログは `~/.apercode/app.log`。
 
 専用ウィンドウの優先順位:
-1. pywebview（`.venv/bin/pip install "pywebview[qt]"` でインストール、任意）
+1. pywebview GTK バックエンド（OS の WebKit2GTK。日本語入力がそのまま使える。`bash setup_linux_window.sh` で準備）
 2. Chromium / Chrome / Brave の `--app` モード（アドレスバー無しのウィンドウ）
-3. 既定のブラウザ
+3. pywebview Qt バックエンド（`pip install "pywebview[qt]"`。pip 版 Qt は fcitx 未対応のため日本語入力に難あり）
+4. 既定のブラウザ
+
+Linux で日本語入力（Mozc 等）を専用ウィンドウで使うには、1 を推奨:
+
+```bash
+bash setup_linux_window.sh   # python3-gi / WebKit2GTK を入れ、.venv を --system-site-packages で作り直す
+```
 
 ターミナルから同じ動作をさせるには `python3 app.py`（`--browser` で常に既定ブラウザ）。
 
-### サーバーだけ起動する（開発用）
+#### トラブルシューティング
+
+**専用ウィンドウで日本語入力（Mozc など）が起動しない**
+
+pip でインストールした Qt（`pywebview[qt]`）には fcitx 用の入力メソッドプラグインが含まれていないため、
+Qt バックエンドの専用ウィンドウ内では IME が動かない。ブラウザ（Firefox 等）では問題なく入力できるのが特徴。
+
+対策: OS 標準の GTK + WebKit2GTK を使う GTK バックエンドに切り替える。
+
+```bash
+bash setup_linux_window.sh
+```
+
+このスクリプトは `python3-gi` と WebKit2GTK のバインディングを apt で入れ、仮想環境を
+`--system-site-packages` 付きで作り直し（依存パッケージも再インストール）、Qt を外す。
+以後 `app.py` は GTK バックエンドを最優先で使うので、OS の日本語入力がそのまま効く。
+
+**専用ウィンドウが開かず、ブラウザで開いてしまう**
+
+`~/.apercode/app.log` に理由が記録される。Qt バックエンドで
+`Could not load the Qt platform plugin "xcb"` と出る場合は `sudo apt install -y libxcb-cursor0`。
+
+**変換確定の Enter で送信されてしまう**
+
+修正済み（IME 変換中の Enter は無視する）。古い `index.html` を使っている場合は最新版に更新すること。
+
+## サーバーだけ起動する（開発用）
 
 ```bash
 python3 main.py

@@ -31,8 +31,33 @@ Linux desktop launcher (app menu + desktop icon):
 
 ```bash
 bash install_desktop.sh
-pip install "pywebview[qt]"             # optional: dedicated window (Debian/Ubuntu: sudo apt install libxcb-cursor0)
+bash setup_linux_window.sh              # optional: dedicated GTK window with native IME support (recommended on Linux)
+# or: pip install "pywebview[qt]"        # Qt window (no fcitx IME support in pip Qt)
 ```
+
+## Troubleshooting
+
+**Japanese / CJK input method (Mozc, fcitx5, ibus) does not work in the dedicated window**
+
+The Qt shipped by pip (`pywebview[qt]`) does not include the fcitx input-method plugin, so the IME never activates
+inside a Qt-backed window, even though it works fine in Firefox or Chromium. Switch to the GTK backend, which uses the
+system WebKit2GTK and therefore the system input method:
+
+```bash
+bash setup_linux_window.sh
+```
+
+The script installs `python3-gi` + WebKit2GTK bindings via apt, recreates `.venv` with `--system-site-packages`
+(re-installing requirements) and removes the pip Qt packages. `app.py` prefers the GTK backend whenever it is available.
+
+**The dedicated window does not open and the default browser is used instead**
+
+Check `~/.apercode/app.log`. If it says `Could not load the Qt platform plugin "xcb"`, install `libxcb-cursor0`
+(Debian/Ubuntu: `sudo apt install -y libxcb-cursor0`).
+
+**Pressing Enter to confirm an IME conversion sends the message**
+
+Fixed: Enter is ignored while a composition is in progress. Make sure you are on the latest `index.html`.
 
 ## Configuration
 
